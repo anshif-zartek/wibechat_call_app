@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:ui';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MyApp());
@@ -44,7 +46,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-const String _kLiveKitUrl = 'wss://zartek-wibechat-4qcjdtw4.livekit.cloud';
+const String _kLiveKitUrl = 'ws://15.207.175.162:7880';
 
 class JoinScreen extends StatefulWidget {
   const JoinScreen({super.key});
@@ -55,7 +57,8 @@ class JoinScreen extends StatefulWidget {
 
 class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateMixin {
   bool _isBusy = false;
-  final _tokenController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _roomController = TextEditingController(text: 'zartek-room');
   final _formKey = GlobalKey<FormState>();
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
@@ -84,9 +87,33 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
 
   @override
   void dispose() {
-    _tokenController.dispose();
+    _nameController.dispose();
+    _roomController.dispose();
     _animController.dispose();
     super.dispose();
+  }
+
+  Future<String?> _fetchToken() async {
+    try {
+      final name = _nameController.text.trim();
+      final room = _roomController.text.trim();
+      
+      final url = Uri.parse(
+        'https://getlivekittoken-3xpiwheqja-uc.a.run.app?room=$room&name=$name',
+      );
+      
+      final response = await http.get(url);
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['token'] as String?;
+      } else {
+        throw Exception('Failed to fetch token: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching token: $e');
+      rethrow;
+    }
   }
 
   Future<void> _joinRoom() async {
@@ -97,6 +124,13 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
     setState(() => _isBusy = true);
 
     try {
+      // Fetch token from API
+      final token = await _fetchToken();
+      
+      if (token == null || token.isEmpty) {
+        throw Exception('Invalid token received');
+      }
+
       await [Permission.camera, Permission.microphone].request();
 
       final roomOptions = RoomOptions(
@@ -115,7 +149,7 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
 
       await room.connect(
         _kLiveKitUrl,
-        _tokenController.text.trim(),
+        token,
       );
 
       try {
@@ -137,6 +171,7 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
       );
     } catch (e) {
       debugPrint('Error joining room: $e');
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -215,7 +250,7 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          "Enter your access token to connect",
+                          "Enter your name and room ID to join",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
@@ -224,18 +259,33 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
                         ),
                         const SizedBox(height: 40),
                         TextFormField(
-                          controller: _tokenController,
-                          style: const TextStyle(color: Color(0xFF0D47A1)), // Dark Blue
+                          controller: _nameController,
+                          style: const TextStyle(color: Color(0xFF0D47A1)),
                           decoration: const InputDecoration(
-                            labelText: 'Access Token',
-                            hintText: 'Paste token here...',
-                            prefixIcon: Icon(Icons.vpn_key_rounded, color: Colors.blueAccent),
+                            labelText: 'Name',
+                            hintText: 'Enter your name...',
+                            prefixIcon: Icon(Icons.person_rounded, color: Colors.blueAccent),
                           ),
-                          maxLines: 3,
-                          minLines: 1,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Token is required';
+                              return 'Name is required';
+                            }
+                            return null;
+                          },
+                          enabled: !_isBusy,
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _roomController,
+                          style: const TextStyle(color: Color(0xFF0D47A1)),
+                          decoration: const InputDecoration(
+                            labelText: 'Room ID',
+                            hintText: 'Enter room ID...',
+                            prefixIcon: Icon(Icons.meeting_room_rounded, color: Colors.blueAccent),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Room ID is required';
                             }
                             return null;
                           },
