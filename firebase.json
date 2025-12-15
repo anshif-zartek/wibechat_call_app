@@ -1,0 +1,55 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "wibechat-demo",
+          "appId": "1:540967880132:android:aac2ea15ca7faf8d711091",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "wibechat-demo",
+          "appId": "1:540967880132:ios:ad25157c32674e63711091",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "wibechat-demo",
+          "appId": "1:540967880132:ios:b459cb9290d3f408711091",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "wibechat-demo",
+          "configurations": {
+            "android": "1:540967880132:android:aac2ea15ca7faf8d711091",
+            "ios": "1:540967880132:ios:ad25157c32674e63711091",
+            "macos": "1:540967880132:ios:b459cb9290d3f408711091",
+            "web": "1:540967880132:web:207a3a1ed5aa058f711091",
+            "windows": "1:540967880132:web:ffee60e2e90430e7711091"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

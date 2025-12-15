@@ -1,4 +1,4 @@
-package com.zartek.wibe.call.wibechat_call_app
+package com.zartek.wibechat.demo
 
 import io.flutter.embedding.android.FlutterActivity
 
