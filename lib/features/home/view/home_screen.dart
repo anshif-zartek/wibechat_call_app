@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -46,7 +50,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-const String _kLiveKitUrl = 'ws://15.207.175.162:7880';
+const String _kLiveKitUrl = 'wss://call.wibechat.com';
 
 class JoinScreen extends StatefulWidget {
   const JoinScreen({super.key});
@@ -55,7 +59,8 @@ class JoinScreen extends StatefulWidget {
   State<JoinScreen> createState() => _JoinScreenState();
 }
 
-class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateMixin {
+class _JoinScreenState extends State<JoinScreen>
+    with SingleTickerProviderStateMixin {
   bool _isBusy = false;
   final _nameController = TextEditingController();
   final _roomController = TextEditingController(text: 'zartek-room');
@@ -75,13 +80,10 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
       parent: _animController,
       curve: Curves.easeOut,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOutQuad,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeOutQuad),
+        );
     _animController.forward();
   }
 
@@ -97,13 +99,13 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
     try {
       final name = _nameController.text.trim();
       final room = _roomController.text.trim();
-      
+
       final url = Uri.parse(
         'https://getlivekittoken-3xpiwheqja-uc.a.run.app?room=$room&name=$name',
       );
-      
+
       final response = await http.get(url);
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['token'] as String?;
@@ -126,7 +128,7 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
     try {
       // Fetch token from API
       final token = await _fetchToken();
-      
+
       if (token == null || token.isEmpty) {
         throw Exception('Invalid token received');
       }
@@ -136,9 +138,7 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
       final roomOptions = RoomOptions(
         adaptiveStream: true,
         dynacast: true,
-        defaultVideoPublishOptions: const VideoPublishOptions(
-          simulcast: true,
-        ),
+        defaultVideoPublishOptions: const VideoPublishOptions(simulcast: true),
         defaultAudioPublishOptions: const AudioPublishOptions(
           name: 'audio_track',
         ),
@@ -147,10 +147,7 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
       final room = Room(roomOptions: roomOptions);
       final listener = room.createListener();
 
-      await room.connect(
-        _kLiveKitUrl,
-        token,
-      );
+      await room.connect(_kLiveKitUrl, token);
 
       try {
         await room.localParticipant?.setCameraEnabled(true);
@@ -163,7 +160,8 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
       Navigator.push(
         context,
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => RoomScreen(room: room, listener: listener),
+          pageBuilder: (_, __, ___) =>
+              RoomScreen(room: room, listener: listener),
           transitionsBuilder: (_, anim, __, child) {
             return FadeTransition(opacity: anim, child: child);
           },
@@ -221,10 +219,7 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
                         offset: const Offset(0, 10),
                       ),
                     ],
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 1,
-                    ),
+                    border: Border.all(color: Colors.white, width: 1),
                   ),
                   child: Form(
                     key: _formKey,
@@ -232,11 +227,7 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Image.asset(
-                          "assets/images/logo.png",
-                          height: 120,
-
-                        ),
+                        Image.asset("assets/images/logo.png", height: 120),
                         const SizedBox(height: 30),
                         const Text(
                           "Join Room",
@@ -264,7 +255,10 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
                           decoration: const InputDecoration(
                             labelText: 'Name',
                             hintText: 'Enter your name...',
-                            prefixIcon: Icon(Icons.person_rounded, color: Colors.blueAccent),
+                            prefixIcon: Icon(
+                              Icons.person_rounded,
+                              color: Colors.blueAccent,
+                            ),
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -281,7 +275,10 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
                           decoration: const InputDecoration(
                             labelText: 'Room ID',
                             hintText: 'Enter room ID...',
-                            prefixIcon: Icon(Icons.meeting_room_rounded, color: Colors.blueAccent),
+                            prefixIcon: Icon(
+                              Icons.meeting_room_rounded,
+                              color: Colors.blueAccent,
+                            ),
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -303,7 +300,10 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
                                   gradient: const LinearGradient(
-                                    colors: [Colors.blue, Color(0xFF0D47A1)], // Blue to Dark Blue
+                                    colors: [
+                                      Colors.blue,
+                                      Color(0xFF0D47A1),
+                                    ], // Blue to Dark Blue
                                   ),
                                   boxShadow: [
                                     BoxShadow(
@@ -332,6 +332,86 @@ class _JoinScreenState extends State<JoinScreen> with SingleTickerProviderStateM
                                   ),
                                 ),
                               ),
+
+                        // Debug-only button to test Analytics
+                        if (kDebugMode)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 17,
+                              vertical: 10,
+                            ),
+                            child: Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Colors.orange,
+                                  width: 2,
+                                ),
+                              ),
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  try {
+                                    // Send Firebase purchase event with ₹50,000
+                                    FirebaseAnalytics.instance.logEvent(name: "test event");
+                                    await FirebaseAnalytics.instance.logPurchase(
+                                      currency: 'INR',
+                                      value: 50000,
+                                      transactionId: 'test_${DateTime.now().millisecondsSinceEpoch}',
+                                      items: [
+                                        AnalyticsEventItem(
+                                          itemId: 'test_item_001',
+                                          itemName: 'Test Product',
+                                          itemCategory: 'test_category',
+                                          price: 50000,
+                                          quantity: 1,
+                                        ),
+                                      ],
+                                    );
+
+
+                                    print("✅ Purchase event sent: ₹50,000");
+
+                                    // Show confirmation
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("✅ Purchase event sent! Check Firebase in 1-2 minutes."),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    print("❌ Error: $e");
+
+                                  }},
+                                icon: Icon(
+                                  Icons.bug_report,
+                                  color: Colors.white,
+                                ),
+                                label: Text(
+                                  "Test Analytics (Debug)",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 8,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -349,11 +429,7 @@ class RoomScreen extends StatefulWidget {
   final Room room;
   final EventsListener<RoomEvent> listener;
 
-  const RoomScreen({
-    super.key,
-    required this.room,
-    required this.listener,
-  });
+  const RoomScreen({super.key, required this.room, required this.listener});
 
   @override
   State<RoomScreen> createState() => _RoomScreenState();
@@ -422,19 +498,21 @@ class _RoomScreenState extends State<RoomScreen> {
       try {
         final devices = await Hardware.instance.enumerateDevices();
         final cameras = devices.where((d) => d.kind == 'videoinput').toList();
-        
+
         if (cameras.length < 2) return;
-        
+
         final currentOptions = track.currentOptions;
         String? currentDeviceId;
         if (currentOptions is CameraCaptureOptions) {
           currentDeviceId = currentOptions.deviceId;
         }
-        
-        int currentIndex = cameras.indexWhere((d) => d.deviceId == currentDeviceId);
+
+        int currentIndex = cameras.indexWhere(
+          (d) => d.deviceId == currentDeviceId,
+        );
         int nextIndex = (currentIndex + 1) % cameras.length;
         final nextCamera = cameras[nextIndex];
-        
+
         await track.switchCamera(nextCamera.deviceId);
       } catch (e) {
         debugPrint('Error switching camera: $e');
@@ -459,7 +537,9 @@ class _RoomScreenState extends State<RoomScreen> {
   @override
   Widget build(BuildContext context) {
     final isOneOnOne = _isOneOnOneCall;
-    final remoteParticipants = participants.where((p) => p is! LocalParticipant).toList();
+    final remoteParticipants = participants
+        .where((p) => p is! LocalParticipant)
+        .toList();
     final localParticipant = participants.firstWhere(
       (p) => p is LocalParticipant,
       orElse: () => participants.first,
@@ -523,7 +603,10 @@ class _RoomScreenState extends State<RoomScreen> {
                   height: 160,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.5),
@@ -573,7 +656,11 @@ class _RoomScreenState extends State<RoomScreen> {
                       color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.videocam_rounded, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.videocam_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -614,7 +701,10 @@ class _RoomScreenState extends State<RoomScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white70,
+                    ),
                     onPressed: _endCall,
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.white.withValues(alpha: 0.1),
@@ -635,24 +725,33 @@ class _RoomScreenState extends State<RoomScreen> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 20,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildControlButton(
-                        icon: _isMicMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
+                        icon: _isMicMuted
+                            ? Icons.mic_off_rounded
+                            : Icons.mic_rounded,
                         isActive: !_isMicMuted,
                         onPressed: _toggleMicrophone,
                         activeColor: Colors.white,
                         inactiveColor: Colors.redAccent,
                       ),
                       _buildControlButton(
-                        icon: _isCameraOff ? Icons.videocam_off_rounded : Icons.videocam_rounded,
+                        icon: _isCameraOff
+                            ? Icons.videocam_off_rounded
+                            : Icons.videocam_rounded,
                         isActive: !_isCameraOff,
                         onPressed: _toggleCamera,
                         activeColor: Colors.white,
@@ -700,15 +799,17 @@ class _RoomScreenState extends State<RoomScreen> {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isEndCall 
-                ? Colors.redAccent 
-                : (isActive ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.9)),
+            color: isEndCall
+                ? Colors.redAccent
+                : (isActive
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.white.withValues(alpha: 0.9)),
             shape: BoxShape.circle,
           ),
           child: Icon(
             icon,
-            color: isEndCall 
-                ? Colors.white 
+            color: isEndCall
+                ? Colors.white
                 : (isActive ? Colors.white : Colors.black),
             size: 24,
           ),
@@ -731,8 +832,9 @@ class ParticipantVideoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     TrackPublication? videoPublication;
-    final cameraTracks = participant.videoTrackPublications
-        .where((pub) => pub.source == TrackSource.camera);
+    final cameraTracks = participant.videoTrackPublications.where(
+      (pub) => pub.source == TrackSource.camera,
+    );
 
     if (cameraTracks.isNotEmpty) {
       videoPublication = cameraTracks.first;
@@ -740,15 +842,20 @@ class ParticipantVideoWidget extends StatelessWidget {
       videoPublication = participant.videoTrackPublications.first;
     }
 
-    final bool isVideoEnabled = videoPublication != null &&
+    final bool isVideoEnabled =
+        videoPublication != null &&
         !videoPublication.muted &&
         videoPublication.track != null;
 
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1A1F38),
-        borderRadius: isFullscreen ? BorderRadius.zero : BorderRadius.circular(16),
-        border: isFullscreen ? null : Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
+        borderRadius: isFullscreen
+            ? BorderRadius.zero
+            : BorderRadius.circular(16),
+        border: isFullscreen
+            ? null
+            : Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -797,11 +904,16 @@ class ParticipantVideoWidget extends StatelessWidget {
               bottom: 12,
               left: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -818,11 +930,11 @@ class ParticipantVideoWidget extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Icon(
-                      participant.isMicrophoneEnabled() 
-                          ? Icons.mic_rounded 
+                      participant.isMicrophoneEnabled()
+                          ? Icons.mic_rounded
                           : Icons.mic_off_rounded,
-                      color: participant.isMicrophoneEnabled() 
-                          ? Colors.greenAccent 
+                      color: participant.isMicrophoneEnabled()
+                          ? Colors.greenAccent
                           : Colors.redAccent,
                       size: 14,
                     ),
