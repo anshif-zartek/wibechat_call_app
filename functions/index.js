@@ -44,7 +44,7 @@ exports.getLivekitToken = functions.https.onRequest(async (req, res) => {
     canSubscribe: true,
   });
 
-  const jwt = await token.toJwt(); // 🔑 THIS WAS MISSING
+  const jwt = await token.toJwt(); 
 
   return res.json({token: jwt});
 });
