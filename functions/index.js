@@ -6,6 +6,8 @@ exports.getLivekitToken = functions.https.onRequest(async (req, res) => {
   const allowedOrigins = [
     "https://wibechat-demo.web.app",
     "http://localhost:5000",
+    "http://localhost:3000",
+    "https://livekit-rust.vercel.app",
   ];
 
   const origin = req.headers.origin;
@@ -43,8 +45,7 @@ exports.getLivekitToken = functions.https.onRequest(async (req, res) => {
     canPublish: true,
     canSubscribe: true,
   });
-
-  const jwt = await token.toJwt(); 
+  const jwt = await token.toJwt();
 
   return res.json({token: jwt});
 });
